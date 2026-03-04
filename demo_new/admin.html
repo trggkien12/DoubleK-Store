@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOUBLE K - Quản Trị Hệ Thống</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* === CSS CƠ BẢN === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Poppins', sans-serif; background: #f4f6f8; color: #333; min-height: 100vh; overflow-x: hidden; }
+        .hidden { display: none !important; }
+        
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: inline-flex; align-items: center; gap: 8px; color: white; }
+        .btn-primary { background: linear-gradient(45deg, #ff6b6b, #4ecdc4); box-shadow: 0 5px 15px rgba(255,107,107,0.4); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,107,107,0.6); }
+        
+        .btn-add { background: #2ecc71; } .btn-edit { background: #f39c12; } .btn-delete { background: #e74c3c; } .btn-other { background: #3498db; }
+        .btn-add:hover, .btn-edit:hover, .btn-delete:hover, .btn-other:hover { filter: brightness(1.1); transform: translateY(-2px); }
+
+        /* === TOPBAR === */
+        .topbar { background: #2d1b69; color: white; padding: 15px 40px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .logo { font-size: 1.8rem; font-weight: 800; color: #4ecdc4; }
+        
+        /* === DASHBOARD ADMIN === */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 40px; }
+        .stat-card { background: white; padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .stat-number { font-size: 2.5rem; font-weight: 700; color: #ff6b6b; margin-bottom: 5px; }
+        
+        .main-nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; padding: 0 40px 40px; }
+        .nav-card { background: white; height: 130px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-decoration: none; color: #2c3e50; font-weight: 600; cursor: pointer; transition: 0.3s; box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #eee; }
+        .nav-card:hover { transform: translateY(-10px); box-shadow: 0 15px 30px rgba(0,0,0,0.1); border-color: #4ecdc4; }
+        .nav-icon { font-size: 2.5rem; color: #4ecdc4; margin-bottom: 10px; }
+
+        /* === BẢNG DỮ LIỆU === */
+        .module-view { padding: 30px 40px; }
+        .module-header { background: white; padding: 20px 30px; border-radius: 15px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .module-constraints { color: #e74c3c; font-size: 0.9rem; margin-top: 5px; }
+        .action-bar { display: flex; gap: 15px; margin-bottom: 20px; }
+        .data-table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .data-table th, .data-table td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        .data-table th { background: #2d1b69; color: white; }
+        .data-table tr:hover { background: #f8f9fa; }
+
+        /* === MODAL FORM === */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
+        .modal-content { background: white; padding: 30px; border-radius: 15px; width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { border-bottom: 2px solid #4ecdc4; padding-bottom: 10px; margin-bottom: 20px; color: #2d1b69; font-size: 1.5rem; font-weight: bold; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 5px; color: #2d1b69; }
+        .form-group input, .form-group select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
+    </style>
+</head>
+<body>
+
+    <div class="topbar">
+        <div class="logo">DOUBLE K ADMIN</div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="text-align: right;">
+                <div id="loggedUserName" style="font-weight: 600;">Đang tải...</div>
+                <div id="loggedUserRole" style="font-size: 0.85rem; color: #bdc3c7;">Vai trò</div>
+            </div>
+            <button class="btn" style="background: #e74c3c; padding: 8px 15px;" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
+        </div>
+    </div>
+
+    <div class="stats-grid" id="mainStats">
+        <div class="stat-card"><div class="stat-number" id="countNV">0</div><div>Nhân viên</div></div>
+        <div class="stat-card"><div class="stat-number" id="countKH">0</div><div>Khách hàng</div></div>
+        <div class="stat-card"><div class="stat-number" id="countSP">0</div><div>Sản phẩm Máy Tính</div></div>
+        <div class="stat-card"><div class="stat-number" id="countDT">0</div><div>Tổng doanh thu (VNĐ)</div></div>
+    </div>
+
+    <div class="main-nav" id="mainNav">
+        <div class="nav-card" onclick="openModule('nhanvien')"><i class="fas fa-user-tie nav-icon"></i>Quản Lý Nhân Viên</div>
+        <div class="nav-card" onclick="openModule('khachhang')"><i class="fas fa-users nav-icon"></i>Quản Lý Khách Hàng</div>
+        <div class="nav-card" onclick="openModule('sanpham')"><i class="fas fa-laptop nav-icon"></i>Quản Lý Sản Phẩm</div>
+        <div class="nav-card" onclick="openModule('kho')"><i class="fas fa-warehouse nav-icon"></i>Quản Lý Kho Máy Tính</div>
+        <div class="nav-card" onclick="openModule('banhang')"><i class="fas fa-shopping-cart nav-icon"></i>Quản Lý Bán Hàng</div>
+        <div class="nav-card" onclick="openModule('thanhtoan')"><i class="fas fa-credit-card nav-icon"></i>Quản Lý Thanh Toán</div>
+        <div class="nav-card" onclick="openModule('baohanh')"><i class="fas fa-tools nav-icon"></i>Thông tin Bảo Hành</div>
+    </div>
+
+    <div id="moduleView" class="module-view hidden">
+        <button class="btn" style="background: #95a5a6; margin-bottom: 20px;" onclick="backToDashboard()"><i class="fas fa-arrow-left"></i> Quay lại Dashboard</button>
+        <div class="module-header">
+            <div>
+                <h2 id="modTitle" style="color: #2d1b69;">Tên Module</h2>
+                <div id="modConstraints" class="module-constraints">Ràng buộc hệ thống...</div>
+            </div>
+            <div id="modAccess" style="background: #ffeaa7; color: #d35400; padding: 5px 15px; border-radius: 20px; font-weight: bold;">Quyền</div>
+        </div>
+        <div id="modActions" class="action-bar"></div>
+        <table class="data-table">
+            <thead id="modThead"></thead>
+            <tbody id="modTbody"></tbody>
+        </table>
+    </div>
+
+    <div id="genericModal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header" id="modalTitle">Tiêu đề Modal</div>
+            <div id="modalBody"></div>
+            <div class="modal-actions">
+                <button class="btn" style="background: #95a5a6;" onclick="closeModal()">Đóng</button>
+                <button class="btn btn-primary" id="modalSubmitBtn">Xác Nhận</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script>
+        // 1. KIỂM TRA QUYỀN TRUY CẬP (BẢO MẬT TRANG ADMIN)
+        let currentUser = getCurrentUser();
+        if (!currentUser || currentUser.role === 'Khách hàng') {
+            alert('Bạn không có quyền truy cập trang quản trị!');
+            window.location.href = 'index.html'; // Đẩy về trang chủ ngay lập tức
+        }
+
+        // Hiển thị tên người dùng
+        document.getElementById('loggedUserName').innerText = currentUser.name;
+        document.getElementById('loggedUserRole').innerText = currentUser.role;
+
+        // 2. CÁC HÀM CƠ BẢN CỦA DASHBOARD
+        function updateDashboardStats() {
+            document.getElementById('countNV').innerText = db.users.filter(u => u.role !== 'Khách hàng').length;
+            document.getElementById('countKH').innerText = db.customers.length;
+            document.getElementById('countSP').innerText = db.products.length;
+            const total = db.orders.filter(o => o.status === 'Đã thanh toán').reduce((sum, o) => sum + o.total, 0);
+            document.getElementById('countDT').innerText = total.toLocaleString('vi-VN');
+        }
+
+        // Chạy thống kê ngay khi tải trang
+        updateDashboardStats();
+
+        function backToDashboard() {
+            document.getElementById('moduleView').classList.add('hidden');
+            document.getElementById('mainStats').classList.remove('hidden');
+            document.getElementById('mainNav').classList.remove('hidden');
+            updateDashboardStats();
+        }
+
+        function closeModal() {
+            document.getElementById('genericModal').classList.add('hidden');
+        }
+
+        // 3. CẤU HÌNH VÀ RENDER MODULES
+        const moduleConfig = {
+            'nhanvien': { title: 'QUẢN LÝ NHÂN VIÊN', access: 'Chỉ Admin', constraints: 'Không xóa người đang đăng nhập. Không xóa NV đã lập HĐ.' },
+            'khachhang': { title: 'QUẢN LÝ KHÁCH HÀNG', access: 'Admin & Nhân viên', constraints: 'Không xóa khách hàng đã có hóa đơn mua máy.' },
+            'sanpham': { title: 'QUẢN LÝ MÁY TÍNH / LINH KIỆN', access: 'Admin & Nhân viên', constraints: 'Giá bán > 0. Tồn kho không được âm.' },
+            'kho': { title: 'QUẢN LÝ KHO', access: 'Admin & Nhân viên', constraints: 'Web/App tự trừ kho khi bán. Không đủ tồn không cho xuất.' },
+            'banhang': { title: 'QUẢN LÝ BÁN HÀNG TẠI QUẦY', access: 'Admin & Nhân viên', constraints: 'Lập Hóa đơn tại quầy sẽ tự động trừ kho.' },
+            'thanhtoan': { title: 'QUẢN LÝ THANH TOÁN', access: 'Admin & Nhân viên', constraints: 'Duyệt thanh toán cho cả đơn từ Web và tại quầy.' },
+            'baohanh': { title: 'THÔNG TIN BẢO HÀNH', access: 'Admin & Nhân viên', constraints: 'Tiếp nhận yêu cầu bảo hành từ khách hàng.' }
+        };
+
+        let currentModule = '';
+
+        function openModule(mod) {
+            currentModule = mod;
+            if (mod === 'nhanvien' && currentUser.role !== 'Admin') {
+                return alert('⛔ Lỗi phân quyền: Chỉ Admin mới được vào Quản lý Nhân viên!');
+            }
+
+            document.getElementById('mainStats').classList.add('hidden');
+            document.getElementById('mainNav').classList.add('hidden');
+            document.getElementById('moduleView').classList.remove('hidden');
+            
+            document.getElementById('modTitle').innerText = moduleConfig[mod].title;
+            document.getElementById('modAccess').innerText = `<i class="fas fa-shield-alt"></i> Quyền: ${moduleConfig[mod].access}`;
+            document.getElementById('modConstraints').innerText = 'Ràng buộc hệ thống: ' + moduleConfig[mod].constraints;
+            
+            renderTableData();
+        }
+
+        function renderTableData() {
+            const thead = document.getElementById('modThead');
+            const tbody = document.getElementById('modTbody');
+            const actions = document.getElementById('modActions');
+            thead.innerHTML = ''; tbody.innerHTML = ''; actions.innerHTML = '';
+
+            if (currentModule === 'nhanvien') {
+                actions.innerHTML = `<button class="btn btn-add" onclick="openForm('nhanvien')"><i class="fas fa-plus"></i> Thêm Nhân Viên</button>`;
+                thead.innerHTML = `<tr><th>ID</th><th>Họ Tên</th><th>Phân quyền</th><th>Thao tác</th></tr>`;
+                db.users.filter(u => u.role !== 'Khách hàng').forEach(u => {
+                    tbody.innerHTML += `<tr><td>${u.id}</td><td>${u.name}</td><td>${u.role}</td>
+                        <td><button class="btn btn-edit" style="padding: 5px 10px;" onclick="openForm('nhanvien', '${u.id}')">Sửa</button> <button class="btn btn-delete" style="padding: 5px 10px;" onclick="deleteData('nhanvien', '${u.id}')">Xóa</button></td></tr>`;
+                });
+            }
+            else if (currentModule === 'khachhang') {
+                actions.innerHTML = `<button class="btn btn-add" onclick="openForm('khachhang')"><i class="fas fa-plus"></i> Thêm Khách Hàng</button>`;
+                thead.innerHTML = `<tr><th>Mã KH</th><th>Tên Khách Hàng</th><th>Số Điện Thoại</th><th>Thao tác</th></tr>`;
+                db.customers.forEach(c => {
+                    tbody.innerHTML += `<tr><td>${c.id}</td><td>${c.name}</td><td>${c.phone}</td>
+                        <td><button class="btn btn-edit" style="padding: 5px 10px;" onclick="openForm('khachhang', '${c.id}')">Sửa</button> <button class="btn btn-delete" style="padding: 5px 10px;" onclick="deleteData('khachhang', '${c.id}')">Xóa</button></td></tr>`;
+                });
+            }
+            else if (currentModule === 'sanpham') {
+                actions.innerHTML = `<button class="btn btn-add" onclick="openForm('sanpham')"><i class="fas fa-plus"></i> Thêm Máy Tính</button>`;
+                thead.innerHTML = `<tr><th>Mã SP</th><th>Sản Phẩm</th><th>Giá bán</th><th>Tồn kho</th><th>Thao tác</th></tr>`;
+                db.products.forEach(p => {
+                    tbody.innerHTML += `<tr><td>${p.id}</td><td><strong>${p.name}</strong></td>
+                        <td style="color:#e67e22; font-weight:bold;">${p.price.toLocaleString()} đ</td>
+                        <td style="color:${p.stock>0?'#2ecc71':'#e74c3c'}; font-weight:bold;">${p.stock}</td>
+                        <td><button class="btn btn-edit" style="padding: 5px 10px;" onclick="openForm('sanpham', '${p.id}')">Sửa</button> <button class="btn btn-delete" style="padding: 5px 10px;" onclick="deleteData('sanpham', '${p.id}')">Xóa</button></td></tr>`;
+                });
+            }
+            else if (currentModule === 'kho') {
+                thead.innerHTML = `<tr><th>Mã SP</th><th>Tên Sản Phẩm Máy Tính</th><th>Tồn kho</th><th>Trạng thái</th></tr>`;
+                db.products.forEach(p => {
+                    let status = p.stock > 10 ? 'Bình thường' : (p.stock > 0 ? 'Sắp hết' : 'Hết hàng');
+                    let color = p.stock > 10 ? '#2ecc71' : (p.stock > 0 ? '#f39c12' : '#e74c3c');
+                    tbody.innerHTML += `<tr><td>${p.id}</td><td>${p.name}</td><td style="font-size: 1.2rem; font-weight:bold;">${p.stock}</td><td style="color:${color}; font-weight:bold;">${status}</td></tr>`;
+                });
+            }
+            else if (currentModule === 'banhang') {
+                actions.innerHTML = `<button class="btn btn-add" onclick="openForm('banhang')"><i class="fas fa-shopping-cart"></i> Lập Hóa Đơn Tại Quầy</button>`;
+                thead.innerHTML = `<tr><th>Mã HĐ</th><th>Khách Hàng</th><th>Sản Phẩm</th><th>SL</th><th>Tổng Tiền</th><th>Người lập</th></tr>`;
+                db.orders.forEach(o => {
+                    let kh = db.customers.find(x=>x.id === o.customerId)?.name || 'Khách xóa';
+                    let sp = db.products.find(x=>x.id === o.productId)?.name || 'SP xóa';
+                    tbody.innerHTML += `<tr><td>${o.id}</td><td>${kh}</td><td>${sp}</td><td>${o.qty}</td><td style="color:#e67e22; font-weight:bold;">${o.total.toLocaleString()} đ</td><td>${o.staffId}</td></tr>`;
+                });
+            }
+            else if (currentModule === 'thanhtoan') {
+                thead.innerHTML = `<tr><th>Mã HĐ</th><th>Nguồn HĐ</th><th>Tổng Tiền</th><th>Trạng thái TT</th><th>Thao tác</th></tr>`;
+                db.orders.forEach(o => {
+                    let color = o.status === 'Đã thanh toán' ? '#2ecc71' : (o.status === 'Hủy' ? '#e74c3c' : '#f39c12');
+                    let nguon = o.staffId === 'Web_Store' ? 'Khách mua trên Web' : 'NV Tại Quầy';
+                    tbody.innerHTML += `<tr><td>${o.id}</td><td>${nguon}</td><td style="font-weight:bold;">${o.total.toLocaleString()} đ</td><td style="color:${color}; font-weight:bold;">${o.status}</td>
+                        <td>${o.status === 'Chưa thanh toán' ? `<button class="btn btn-add" style="padding: 5px 10px;" onclick="updateOrderStatus('${o.id}', 'Đã thanh toán')"><i class="fas fa-check"></i> Xác nhận TT</button> <button class="btn btn-delete" style="padding: 5px 10px;" onclick="updateOrderStatus('${o.id}', 'Hủy')">Hủy HĐ</button>` : ''}</td></tr>`;
+                });
+            }
+            else if (currentModule === 'baohanh') {
+                 thead.innerHTML = `<tr><th>Mã HĐ</th><th>Sản phẩm</th><th>Trạng thái TT</th><th>Hành động</th></tr>`;
+                 db.orders.forEach(o => {
+                    let sp = db.products.find(x=>x.id === o.productId)?.name || 'SP xóa';
+                    tbody.innerHTML += `<tr><td>${o.id}</td><td>${sp}</td><td>${o.status}</td><td><button class="btn btn-other" style="padding: 5px 10px;" onclick="alert('Đã duyệt yêu cầu bảo hành cho hóa đơn: ${o.id}')"><i class="fas fa-tools"></i> Duyệt BH</button></td></tr>`;
+                 });
+            }
+        }
+
+        // 4. LOGIC MỞ FORM THÊM / SỬA (CRUD)
+        function openForm(type, id = null) {
+            const modal = document.getElementById('genericModal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+            const btn = document.getElementById('modalSubmitBtn');
+            modal.classList.remove('hidden');
+
+            if (type === 'sanpham') {
+                let p = id ? db.products.find(x => x.id === id) : {id:'', name:'', price:0, stock:0};
+                title.innerText = id ? 'Sửa Máy Tính' : 'Thêm Máy Tính/Linh Kiện';
+                body.innerHTML = `
+                    <input type="hidden" id="fId" value="${p.id}">
+                    <div class="form-group"><label>Tên Sản phẩm / Cấu hình</label><input type="text" id="fName" value="${p.name}"></div>
+                    <div class="form-group"><label>Giá (VNĐ) - Lớn hơn 0</label><input type="number" id="fPrice" value="${p.price}"></div>
+                    <div class="form-group"><label>Tồn kho</label><input type="number" id="fStock" value="${p.stock}"></div>
+                `;
+                btn.onclick = () => {
+                    let name = document.getElementById('fName').value.trim();
+                    let price = parseInt(document.getElementById('fPrice').value);
+                    let stock = parseInt(document.getElementById('fStock').value);
+                    if(!name) return alert('Thiếu tên!'); 
+                    if(price <= 0 || stock < 0) return alert('Lỗi: Giá phải > 0 và Tồn kho không được âm!');
+                    
+                    if(id) { let pr = db.products.find(x=>x.id===id); pr.name=name; pr.price=price; pr.stock=stock; } 
+                    else db.products.push({ id: generateId('PC'), name, price, stock, img: 'fa-desktop' });
+                    
+                    saveDB(); closeModal(); renderTableData();
+                };
+            }
+            else if (type === 'khachhang') {
+                let c = id ? db.customers.find(x => x.id === id) : {id:'', name:'', phone:''};
+                title.innerText = id ? 'Sửa Khách Hàng' : 'Thêm Khách Hàng';
+                body.innerHTML = `
+                    <input type="hidden" id="fId" value="${c.id}">
+                    <div class="form-group"><label>Tên Khách</label><input type="text" id="fName" value="${c.name}"></div>
+                    <div class="form-group"><label>Điện thoại</label><input type="text" id="fPhone" value="${c.phone}"></div>
+                `;
+                btn.onclick = () => {
+                    let name = document.getElementById('fName').value.trim(); 
+                    let phone = document.getElementById('fPhone').value.trim();
+                    if(!name || !phone) return alert('Thiếu thông tin!');
+                    
+                    if(id) { let cu = db.customers.find(x=>x.id===id); cu.name=name; cu.phone=phone; } 
+                    else db.customers.push({ id: generateId('KH'), name, phone });
+                    
+                    saveDB(); closeModal(); renderTableData();
+                };
+            }
+            else if (type === 'nhanvien') {
+                let u = id ? db.users.find(x => x.id === id) : {id:'', name:'', role:'Nhân viên', password:''};
+                title.innerText = id ? 'Sửa Nhân Viên' : 'Thêm Nhân Viên';
+                body.innerHTML = `
+                    <div class="form-group"><label>ID Đăng nhập</label><input type="text" id="fId" value="${u.id}" ${id?'readonly':''}></div>
+                    <div class="form-group"><label>Họ Tên</label><input type="text" id="fName" value="${u.name}"></div>
+                    <div class="form-group"><label>Quyền</label><select id="fRole"><option value="Nhân viên" ${u.role==='Nhân viên'?'selected':''}>Nhân viên</option><option value="Admin" ${u.role==='Admin'?'selected':''}>Admin</option></select></div>
+                    <div class="form-group"><label>Mật khẩu</label><input type="text" id="fPass" value="${u.password}"></div>
+                `;
+                btn.onclick = () => {
+                    let uid = document.getElementById('fId').value.trim(); let name = document.getElementById('fName').value.trim(); let role = document.getElementById('fRole').value; let pass = document.getElementById('fPass').value;
+                    if(!uid || !name || !pass) return alert('Thiếu thông tin!');
+                    
+                    if(id) { let us = db.users.find(x=>x.id===uid); us.name=name; us.role=role; us.password=pass; } 
+                    else { if(db.users.find(x=>x.id===uid)) return alert('ID đã tồn tại!'); db.users.push({ id: uid, name, role, password: pass }); }
+                    
+                    saveDB(); closeModal(); renderTableData();
+                };
+            }
+            else if (type === 'banhang') {
+                title.innerText = 'Lập Hóa Đơn Tại Quầy';
+                let khOpts = db.customers.map(c => `<option value="${c.id}">${c.name} - ${c.phone}</option>`).join('');
+                let spOpts = db.products.filter(p=>p.stock>0).map(p => `<option value="${p.id}" data-price="${p.price}" data-stock="${p.stock}">${p.name} (Tồn: ${p.stock})</option>`).join('');
+                
+                body.innerHTML = `
+                    <div class="form-group"><label>Khách Hàng</label><select id="fCus">${khOpts}</select></div>
+                    <div class="form-group"><label>Sản Phẩm</label><select id="fPro" onchange="calcTotal()">${spOpts}</select></div>
+                    <div class="form-group"><label>Số lượng</label><input type="number" id="fQty" value="1" min="1" onchange="calcTotal()"></div>
+                    <div style="margin-top:20px; font-size:1.2rem; font-weight:bold; color:#e74c3c;">Tổng: <span id="fTotal">0</span> VNĐ</div>
+                `;
+                
+                window.calcTotal = function() { 
+                    const sel = document.getElementById('fPro'); 
+                    if(!sel.options.length) return; 
+                    const price = parseInt(sel.options[sel.selectedIndex].getAttribute('data-price')); 
+                    const qty = parseInt(document.getElementById('fQty').value)||0; 
+                    document.getElementById('fTotal').innerText = (price * qty).toLocaleString(); 
+                };
+                setTimeout(calcTotal, 100);
+                
+                btn.onclick = () => {
+                    let cId = document.getElementById('fCus').value; 
+                    let sel = document.getElementById('fPro'); 
+                    let pId = sel.value; 
+                    let qty = parseInt(document.getElementById('fQty').value); 
+                    let price = parseInt(sel.options[sel.selectedIndex].getAttribute('data-price')); 
+                    let stock = parseInt(sel.options[sel.selectedIndex].getAttribute('data-stock'));
+                    
+                    if(qty <= 0 || qty > stock) return alert(`Lỗi: Kho chỉ còn ${stock} sản phẩm!`);
+                    
+                    db.orders.push({ id: generateId('HD'), customerId: cId, productId: pId, qty: qty, total: price*qty, staffId: currentUser.name, status: 'Chưa thanh toán' });
+                    db.products.find(x=>x.id === pId).stock -= qty; // Trừ kho
+                    
+                    alert('Lập Hóa đơn tại quầy thành công! Kho đã được trừ tự động.'); 
+                    saveDB(); closeModal(); renderTableData();
+                };
+            }
+        }
+
+        // Cập nhật trạng thái Đơn hàng
+        function updateOrderStatus(oId, status) {
+            let o = db.orders.find(x=>x.id === oId); 
+            o.status = status;
+            
+            // Nếu hủy đơn -> Cộng lại tồn kho
+            if(status === 'Hủy') { 
+                let p = db.products.find(x=>x.id === o.productId); 
+                if(p) p.stock += o.qty; 
+            }
+            saveDB(); renderTableData();
+        }
+
+        // Xóa dữ liệu (Kèm kiểm tra Khóa Ngoại)
+        function deleteData(type, id) {
+            if (type === 'nhanvien') { 
+                if(id === currentUser.id) return alert('Lỗi: Bạn không thể tự xóa chính mình!'); 
+                db.users = db.users.filter(x=>x.id!==id); 
+            }
+            else if (type === 'khachhang') { 
+                if(db.orders.find(x=>x.customerId === id)) return alert('Lỗi Ràng Buộc: Khách hàng này đã có Lịch sử mua hàng, không thể xóa!'); 
+                if(confirm('Chắc chắn xóa khách hàng này?')) db.customers = db.customers.filter(x=>x.id!==id); 
+            }
+            else if (type === 'sanpham') { 
+                if(db.orders.find(x=>x.productId === id)) return alert('Lỗi Ràng Buộc: Máy tính này đã từng được bán (nằm trong Hóa đơn). Hãy set tồn kho = 0 thay vì xóa!'); 
+                if(confirm('Chắc chắn xóa sản phẩm này?')) db.products = db.products.filter(x=>x.id!==id); 
+            }
+            saveDB(); renderTableData();
+        }
+    </script>
+</body>
+</html>

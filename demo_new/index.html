@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOUBLE K PC - Cổng Đăng Nhập</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* CSS Cơ Bản */
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: linear-gradient(135deg, #0f0f23 0%, #2d1b69 50%, #1a1a2e 100%); 
+            color: white; 
+            display: flex; 
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+        
+        .logo { 
+            font-size: 3rem; 
+            font-weight: 800; 
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #f9ca24); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            text-shadow: 0 0 20px rgba(255,107,107,0.5); 
+            margin-bottom: 30px;
+        }
+
+        .auth-container { 
+            background: rgba(255,255,255,0.95); 
+            color: #333; 
+            padding: 40px; 
+            border-radius: 20px; 
+            width: 400px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3); 
+            position: relative;
+            overflow: hidden;
+        }
+
+        h2 { 
+            text-align: center; 
+            color: #2d1b69; 
+            margin-bottom: 25px; 
+            font-weight: 700;
+        }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 8px; color: #2d1b69; font-size: 0.9rem; }
+        .form-group input { width: 100%; padding: 12px 15px; border: 1px solid #ddd; border-radius: 8px; font-family: inherit; font-size: 1rem; box-sizing: border-box; transition: 0.3s; }
+        .form-group input:focus { outline: none; border-color: #4ecdc4; box-shadow: 0 0 0 3px rgba(78,205,196,0.2); }
+
+        .btn { 
+            width: 100%; 
+            padding: 15px; 
+            border: none; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            font-size: 1.1rem;
+            cursor: pointer; 
+            transition: all 0.3s; 
+            color: white; 
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4); 
+            box-shadow: 0 5px 15px rgba(255,107,107,0.4);
+            margin-top: 10px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,107,107,0.6); }
+
+        .toggle-link { 
+            text-align: center; 
+            margin-top: 20px; 
+            font-size: 0.9rem; 
+            color: #7f8c8d; 
+        }
+        .toggle-link span { 
+            color: #4ecdc4; 
+            cursor: pointer; 
+            font-weight: 600; 
+        }
+        .toggle-link span:hover { text-decoration: underline; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="logo">DOUBLE K PC</div>
+
+    <div class="auth-container" id="loginForm">
+        <h2><i class="fas fa-sign-in-alt"></i> ĐĂNG NHẬP</h2>
+        <div class="form-group">
+            <label>Số điện thoại (Khách) hoặc ID (Admin)</label>
+            <input type="text" id="lgUsername" placeholder="Nhập ID đăng nhập...">
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="lgPassword" placeholder="Nhập mật khẩu...">
+        </div>
+        <button class="btn" onclick="doLogin()">Vào Hệ Thống</button>
+        <div class="toggle-link">
+            Chưa có tài khoản? <span onclick="toggleForm('register')">Đăng ký ngay</span>
+        </div>
+        <div style="text-align: center; margin-top: 15px; font-size: 0.8rem; color: #bdc3c7;">
+            💡 Gợi ý: Tài khoản Admin mặc định là <strong>admin</strong> / <strong>123456</strong>
+        </div>
+    </div>
+
+    <div class="auth-container hidden" id="registerForm">
+        <h2><i class="fas fa-user-plus"></i> ĐĂNG KÝ KHÁCH MỚI</h2>
+        <div class="form-group">
+            <label>Số điện thoại (Dùng làm ID đăng nhập)</label>
+            <input type="tel" id="rgPhone" placeholder="Ví dụ: 0988123456">
+        </div>
+        <div class="form-group">
+            <label>Họ và Tên</label>
+            <input type="text" id="rgName" placeholder="Nhập họ tên đầy đủ...">
+        </div>
+        <div class="form-group">
+            <label>Mật khẩu</label>
+            <input type="password" id="rgPassword" placeholder="Tạo mật khẩu...">
+        </div>
+        <button class="btn" onclick="doRegister()">Tạo Tài Khoản</button>
+        <div class="toggle-link">
+            Đã có tài khoản? <span onclick="toggleForm('login')">Quay lại đăng nhập</span>
+        </div>
+    </div>
+
+    <script src="db.js"></script>
+    <script>
+        // Hàm chuyển đổi qua lại giữa Đăng nhập và Đăng ký
+        function toggleForm(mode) {
+            if (mode === 'register') {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('registerForm').classList.remove('hidden');
+            } else {
+                document.getElementById('registerForm').classList.add('hidden');
+                document.getElementById('loginForm').classList.remove('hidden');
+            }
+        }
+
+        // Xử lý Đăng nhập
+        function doLogin() {
+            const u = document.getElementById('lgUsername').value.trim();
+            const p = document.getElementById('lgPassword').value;
+            
+            // Tìm user trong mảng db.users (đã được tải từ db.js)
+            const user = db.users.find(x => x.id === u && x.password === p);
+            
+            if (user) {
+                // Lưu user đang đăng nhập vào bộ nhớ cục bộ
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                
+                // ĐIỀU HƯỚNG THEO PHÂN QUYỀN
+                if (user.role === 'Khách hàng') {
+                    window.location.href = 'store.html'; // Chuyển qua file Cửa hàng
+                } else {
+                    window.location.href = 'admin.html'; // Chuyển qua file Admin
+                }
+            } else {
+                alert('❌ Sai tên đăng nhập hoặc mật khẩu!');
+            }
+        }
+
+        // Xử lý Đăng ký Khách hàng mới
+        function doRegister() {
+            const phone = document.getElementById('rgPhone').value.trim();
+            const name = document.getElementById('rgName').value.trim();
+            const pass = document.getElementById('rgPassword').value;
+            
+            // Kiểm tra ràng buộc cơ bản
+            if(!phone || !name || !pass) {
+                return alert('⚠️ Vui lòng điền đầy đủ thông tin!');
+            }
+            if(db.users.find(x => x.id === phone)) {
+                return alert('❌ Số điện thoại này đã được đăng ký!');
+            }
+            
+            // 1. Thêm vào danh sách Tài khoản đăng nhập
+            db.users.push({ 
+                id: phone, 
+                name: name, 
+                role: 'Khách hàng', 
+                password: pass 
+            });
+            
+            // 2. Thêm vào danh sách Quản lý Khách hàng của Admin
+            if(!db.customers.find(x => x.phone === phone)) {
+                db.customers.push({ 
+                    id: generateId('KH'), 
+                    name: name, 
+                    phone: phone 
+                });
+            }
+
+            // Lưu toàn bộ thay đổi vào db.js
+            saveDB();
+            
+            alert('🎉 Đăng ký Khách hàng thành công! Vui lòng đăng nhập.');
+            
+            // Tự động điền ID cho khách dễ đăng nhập
+            document.getElementById('lgUsername').value = phone;
+            toggleForm('login');
+        }
+
+        // Tự động chuyển hướng nếu người dùng đã đăng nhập trước đó rồi (Chưa bấm đăng xuất)
+        window.onload = function() {
+            let user = getCurrentUser();
+            if (user) {
+                if (user.role === 'Khách hàng') window.location.href = 'store.html';
+                else window.location.href = 'admin.html';
+            }
+        }
+    </script>
+</body>
+</html>
